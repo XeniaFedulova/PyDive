@@ -1,3 +1,4 @@
+from pydoc import doc
 class Range:
 
     def __init__(self, start, stop, step):
@@ -23,6 +24,12 @@ for i in range:
     print(i)
 
 
+
+string = "Fallon Capece"
+
+list = [i.isdigit() for i in string]
+print(list)
+print(any(i.isdigit() for i in string))
 
 
 

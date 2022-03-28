@@ -18,12 +18,17 @@ class Phonebook:
         print(name_pattern)
         for line in self.phone_file.readlines():
             line_stripped = line.replace(" ", "")
-            l = re.findall(name_pattern+","+phone_pattern, line_stripped)
+            l = re.match(name_pattern+","+phone_pattern, line_stripped)
             if l != []:
                 print(line, end = "")
 
 
-book = Phonebook("1_WildcardSearchData.txt")
-book.search_all_intersections("0", "Er*")
 
+# book = Phonebook("1_WildcardSearchData.txt")
+# book.search_all_intersections("Julene Galgano,0625 8756443")
+
+string = 'Julene Galgano,0625 8756443'
+print(re.match('Jul.*,06.*', string))
+if re.match('Jul.*,06.*', string) != None:
+    print(string)
 

@@ -98,10 +98,13 @@ class Phonebook:
 
         self.phone_file = self.open_file()
         name_pattern = name_wildcard.replace("*", "[A-Z a-z\s]+")
-        phone_pattern = phone_wildcard.replace("*", "[^a-zA-Z\n]+")
+        phone_pattern = phone_wildcard.replace("*", "[^a-zA-Z]+")
+
+        print(phone_pattern)
+        print(name_pattern)
 
         for line in self.phone_file.readlines():
-            line_stripped = line.replace(" ", "")
+            line_stripped = line.replace("", "")
             l = re.findall(name_pattern+","+phone_pattern, line_stripped)
             if l != []:
                 print(line, end = "")
@@ -115,25 +118,16 @@ if "*" not in data:
     else:
         print(book.search_by_name(data))
 else:
-    flag = [0, 0]
-    for i in data:
-        if i.isdigit():
-            flag[0] = "phone"
-        elif i.isalpha():
-            flag[1] = "name"
-        else:
-            continue
-    if flag == ["phone", 0]:
-        book.search_by_phone_wildcard(data)
-    elif flag == [0, "name"]:
-        book.search_by_name_wildcard(data)
-    elif flag == ["phone", "name"]:
-        for symbol_id in range(len(data)):
-            if data[symbol_id].isalpha():
-                phone_wildcard = data[0:(symbol_id - 1)].strip(" ")
-                name_wildcard = data[symbol_id:len(data)]
-                print(phone_wildcard)
-                print(name_wildcard)
-                book.search_all_intersections(phone_wildcard, name_wildcard)
-                break
-
+    if any(i.isdigit() for i in data) or any(i == "-" or i == "+" for i in data) and any(i.isalpha() for i in data):
+        s = re.split('(\s|\*)([A-Za-z])', data)
+        print(s)
+        phone_wildcard = s[0]
+        delimiter = ''
+        name_wildcard = delimiter.join(s[2:])
+        print(phone_wildcard)
+        print(name_wildcard)
+        print(book.search_all_intersections(phone_wildcard, name_wildcard))
+    elif any(i.isdigit() for i in data):
+        print(book.search_by_phone_wildcard(data))
+    elif any(i.isalpha() for i in data):
+        print(book.search_by_name_wildcard(data))

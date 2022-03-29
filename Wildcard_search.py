@@ -44,10 +44,12 @@ class Phonebook:
             return open(self.file_name)
 
     def search_by_name(self, name):
-        return self.name_dict[name]
+        result = name+","+"".join(self.name_dict[name])
+        return result
 
     def search_by_phone(self, phone):
-        return self.phone_dict[phone]
+        result = "".join(self.phone_dict[phone])+","+phone
+        return result
 
     def search_similar_names(self):
         similar_names = []
@@ -76,7 +78,7 @@ class Phonebook:
             if letter == "*":
                 names = self.recursive_search(name_wildcard[:-1], lvl)
                 for name in names:
-                    print(self.name_dict[name])
+                    print(name+","+"".join(self.name_dict[name]))
             elif letter in lvl:
                 lvl = lvl[letter]
             else:
@@ -88,7 +90,7 @@ class Phonebook:
             if number == "*":
                 phones = self.recursive_search(phone_wildcard[:-1], lvl)
                 for phone in phones:
-                    print(self.phone_dict[phone])
+                    print("".join(self.phone_dict[phone])+","+phone)
             elif number in lvl:
                 lvl = lvl[number]
             else:
@@ -105,8 +107,8 @@ class Phonebook:
 
         for line in self.phone_file.readlines():
             line_stripped = line.replace("", "")
-            l = re.findall(name_pattern+","+phone_pattern, line_stripped)
-            if l != []:
+            l = re.match(name_pattern+","+phone_pattern, line_stripped)
+            if l != None:
                 print(line, end = "")
 
 
@@ -118,14 +120,11 @@ if "*" not in data:
     else:
         print(book.search_by_name(data))
 else:
-    if any(i.isdigit() for i in data) or any(i == "-" or i == "+" for i in data) and any(i.isalpha() for i in data):
+    if (any(i.isdigit() for i in data) or any(i == "-" or i == "+" for i in data)) and any(i.isalpha() for i in data):
         s = re.split('(\s|\*)([A-Za-z])', data)
-        print(s)
         phone_wildcard = s[0]
         delimiter = ''
         name_wildcard = delimiter.join(s[2:])
-        print(phone_wildcard)
-        print(name_wildcard)
         print(book.search_all_intersections(phone_wildcard, name_wildcard))
     elif any(i.isdigit() for i in data):
         print(book.search_by_phone_wildcard(data))

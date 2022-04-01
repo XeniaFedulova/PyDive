@@ -52,9 +52,6 @@ class Playground:
         self.curr_symbol_index = (y - 1) * self.size + x - 1
         self.field[(y - 1) * self.size + x - 1] = symbol
 
-        # if self.check_win(symbol, x, y):
-        #     print("You win")
-
     def check_win(self, symbol, x, y):
 
         for key, item in self.diagonals.items():
@@ -100,20 +97,22 @@ class Game:
         self.playground = Playground(self.size_of_field, self.condition_of_win)
         self.players = [0 for i in range(number_of_players)]
 
+
     def set_player(self, symbol):
 
         if symbol == "x":
             index = 0
         else:
-            index = random.randint(1, number_of_players-1)
+            index = 1
+            while self.players[index] != 0:
+                index = random.randint(1, number_of_players-1)
         self.players[index] = Player(symbol)
 
     def pass_turn_to_player(self):
 
         self.move_counter += 1
-        player = self.players[(self.move_counter - 1) % (self.playground.size-1)]
+        player = self.players[(self.move_counter - 1) % (self.number_of_players)]
         return player
-
 
 class Player:
     symbol = ""

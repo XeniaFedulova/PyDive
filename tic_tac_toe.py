@@ -97,7 +97,6 @@ class Game:
         self.playground = Playground(self.size_of_field, self.condition_of_win)
         self.players = [0 for i in range(number_of_players)]
 
-
     def set_player(self, symbol):
 
         if symbol == "x":
@@ -105,7 +104,7 @@ class Game:
         else:
             index = 1
             while self.players[index] != 0:
-                index = random.randint(1, number_of_players-1)
+                index = random.randint(1, number_of_players - 1)
         self.players[index] = Player(symbol)
 
     def pass_turn_to_player(self):
@@ -113,6 +112,7 @@ class Game:
         self.move_counter += 1
         player = self.players[(self.move_counter - 1) % (self.number_of_players)]
         return player
+
 
 class Player:
     symbol = ""
@@ -127,7 +127,8 @@ class Player:
 
 
 size_of_field = int(input('Введите размер поля:'))
-condition_of_win = int(input("Введите количество победных символов:"))
+condition_of_win = int(input(
+    "Введите условие победы (кол-во одинаковых символов в строке, столбце или диагонали подряд, необходимое для победы):"))
 number_of_players = int(input("Введите количество игроков:"))
 symbol = ""
 game = Game(size_of_field, condition_of_win, number_of_players)
@@ -137,7 +138,7 @@ for player in range(1, number_of_players + 1):
     game.set_player(symbol)
 
 player = game.pass_turn_to_player()
-print("Ход игрока "+player.symbol)
+print("Ход игрока " + player.symbol)
 x = int(input("Введите координату x:"))
 y = int(input("Введите координату y:"))
 player.make_move(x, y, game.playground)
@@ -147,7 +148,3 @@ while game.playground.check_win(player.symbol, x, y) != True:
     x = int(input("Введите координату x:"))
     y = int(input("Введите координату y:"))
     player.make_move(x, y, game.playground)
-
-
-
-

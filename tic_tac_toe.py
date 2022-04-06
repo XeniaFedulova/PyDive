@@ -12,10 +12,10 @@ class Playground:
 
         self.size = size
         self.field = ["." for i in range(size * size)]
-        self._make_list_of_diagonals(self.size)
+        self._make_list_of_diagonals()
 
-    def _make_list_of_diagonals(self, size):
-        #защищенный метод
+    def _make_list_of_diagonals(self):
+        # защищенный метод
         n = self.size
 
         for i in range(n - 1):
@@ -47,14 +47,14 @@ class Playground:
         print("______")
 
     def change_playground_symbol(self, symbol, x, y):
-        self.curr_symbol_index = (y - 1) * self.size + x - 1
-        self.field[self.curr_symbol_index] = symbol
+        curr_symbol_index = (y - 1) * self.size + x - 1
+        self.field[curr_symbol_index] = symbol
 
     def cell_is_free(self, x, y):
         if self.field[(y - 1) * self.size + x - 1] == '.':
             return True
-        else:
-            return False
+        return False
+
 
 class Game:
     mode = None
@@ -65,22 +65,41 @@ class Game:
     move_counter = 0
     playground = None
 
-    def __init__(self, mode, size_of_field, condition_of_win, number_of_players):
+    def __init__(self, mode):
 
         self.mode = mode
-        self.size_of_field = size_of_field
-        self.condition_of_win = condition_of_win
-        self.number_of_players = number_of_players
-        self.playground = Playground(self.size_of_field)
-        self.players = [0 for i in range(number_of_players)]
+        self._set_params()
 
-    def set_params(self):
+    def _set_params(self):
         if mode == 1:
             self.size_of_field = int(input('Введите размер поля:'))
             self.condition_of_win = int(input(
                 "Введите условие победы (кол-во одинаковых символов в строке, столбце или диагонали подряд, необходимое для победы):"))
             self.number_of_players = int(input("Введите количество игроков:"))
+            self.playground = Playground(self.size_of_field)
+            self.players = [0 for i in range(self.number_of_players)]
 
+        elif mode == 2:
+            self.size_of_field = 3
+            self.condition_of_win = 3
+            self.number_of_players = 2
+            self.playground = Playground(self.size_of_field)
+            self.players = [0 for i in range(self.number_of_players)]
+
+        self._set_list_of_players()
+
+    def _set_list_of_players(self):
+        if self.mode == 1:
+            for player in range(1, self.number_of_players + 1):
+                symbol = input("Введите символ игрока" + str(player) + " :")
+                self.set_player(symbol)
+        elif self.mode == 2:
+            gamer_symbol = input("Каким символом вы хотите играть (x или o?)")
+            self.set_player(gamer_symbol)
+            if gamer_symbol == 'x':
+                self.players = [ConsolePlayer("x", self), AIPlayer("o", self)]
+            elif gamer_symbol == 'o':
+                self.players = [AIPlayer("x", self), ConsolePlayer("o", self)]
 
     def set_player(self, symbol):
 
@@ -89,8 +108,8 @@ class Game:
         else:
             index = 1
             while self.players[index] != 0:
-                index = random.randint(1, number_of_players - 1)
-        self.players[index] = Player(symbol, self)
+                index = random.randint(1, self.number_of_players - 1)
+        self.players[index] = ConsolePlayer(symbol, self)
 
     def pass_turn_to_player(self):
 
@@ -109,15 +128,17 @@ class Game:
             coordinates = player.make_move()
             self.change_playground_symbol(player.symbol, coordinates)
             self.playground.print_field()
-            if self.check_win(player.symbol, coordinates[0], coordinates[1], self.playground):
-                print("Вы выйграли!")
+            if self.check_win(player.symbol, coordinates[0], coordinates[1]):
+                print("Игрок "+player.symbol+" выйграл")
                 break
             elif self.if_dead_head(self.playground):
                 print("Ничья")
                 break
             player = self.pass_turn_to_player()
 
-    def check_win(self, symbol, x, y, playground):
+    def check_win(self, symbol, x, y):
+
+        playground = self.playground
 
         for key, item in playground.diagonals.items():
             playground.diagonals_symbol[key] = [playground.field[j] for j in playground.diagonals[key]]
@@ -128,7 +149,7 @@ class Game:
         check_row = []
         for i in range(1, playground.size + 1):
             check_row.append(playground.field[(i - 1) * playground.size + row - 1])
-        if (symbol * self.condition_of_win) in "".join(check_row):
+        if symbol * self.condition_of_win in "".join(check_row):
             return True
 
         column = y
@@ -146,18 +167,17 @@ class Game:
     def cell_is_free(self, x, y):
         return self.playground.cell_is_free(x, y)
 
-    def field_state(self):
-        field_copy = self.playground.field.copy()
-        return field_copy
 
 class Player:
-
     symbol = ""
     game = None
 
     def __init__(self, symbol, game):
         self.symbol = symbol
         self.game = game
+
+
+class ConsolePlayer(Player):
 
     def make_move(self):
         while True:
@@ -172,109 +192,55 @@ class Player:
                 print("Клетка по заданным вами координатам лежит вне игрового поля")
 
 
-# class ConsolePlayer(Player):
-#
-#     def make_move(self):
-
-
 class AIPlayer(Player):
 
-    def opponent(self):
+    def opponent_symbol(self):
         if self.symbol == "x":
-            opponent = AIPlayer("o", self.game)
-            return opponent
+            return "o"
         else:
-            opponent = AIPlayer("x", self.game)
-            return opponent
+            return "x"
 
+    def necessary_cell(self):
+        cell_need_to_take = None
+        opponent_symbol = self.opponent_symbol()
+        game_state = copy.deepcopy(self.game)
+        for i in range(1, 4):
+            for j in range(1, 4):
+                if game.cell_is_free(i, j):
+                    game_state.change_playground_symbol(self.symbol, (i, j))
+                    if game_state.check_win(self.symbol, i, j):
+                        return i, j
+                    else:
+                        game_state.change_playground_symbol('.', (i, j))
+
+                    potentional_opponent_coord = (i, j)
+                    game_state.change_playground_symbol(opponent_symbol, potentional_opponent_coord)
+                    if game_state.check_win(opponent_symbol, i, j):
+                        cell_need_to_take = (i, j)
+                    game_state.change_playground_symbol('.', potentional_opponent_coord)
+
+        if cell_need_to_take != None:
+            return cell_need_to_take
+        else:
+            return False
 
     def make_move(self):
 
-        indexes = {(1,1): 0, (1,2): 0, (1,3): 0, (2,1): 0, (2,2): 0, (2,3): 0, (3,1): 0, (3,2): 0, (3,3): 0}
-        for cell, score in indexes.items():
-            field_state = self.game.field_state()
-            x = cell[0]
-            y = cell[1]
-            if self.game.cell_is_free(self, x, y):
-                field_state[(y - 1) * 3 + x - 1] = self.symbol
-                if self.game.check_win(self.symbol, x, y, field_state):
-                    score += 10
-                    return score
-                elif self.game.check_win(self.opponent.symbol(), x, y, field_state):
-                    score -= 10
-                    return score
-                elif self.game.if_dead_head(field_state):
-                    score = 0
-                    return score
+        if game.move_counter == 1:
+            x, y = 2, 2
+            return x, y
+        else:
+            necessary_cell = self.necessary_cell()
+            if not necessary_cell:
+                while True:
+                    x = random.randint(1, 3)
+                    y = random.randint(1, 3)
+                    if self.game.cell_is_free(x, y):
+                        return x, y
+            else:
+                return necessary_cell
 
-                self.opponent.make_move(field_state)
-                self.make_move(field_state)
-
-        maximum = max(indexes, key=indexes.get())
-        return maximum
-
-
-
-
-
-
-
-
-
-
-
-
-#список игроков и борд создается снаружи
 
 mode = int(input('Выберите режим игры: 1 - игра с людьми, 2 - игра с компьютером (поле 3х3):'))
-if mode == 1:
-    size_of_field = int(input('Введите размер поля:'))
-    condition_of_win = int(input(
-        "Введите условие победы (кол-во одинаковых символов в строке, столбце или диагонали подряд, необходимое для победы):"))
-    number_of_players = int(input("Введите количество игроков:"))
-    symbol = ""
-    game = Game(size_of_field, condition_of_win, number_of_players)
-if mode == 2:
-    game = Game(3, 3, 2)
-
-for player in range(1, number_of_players + 1):
-    symbol = input("Введите символ игрока" + str(player) + " :")
-    game.set_player(symbol)
-
+game = Game(mode)
 game.play_game()
-
-
-
-
-
-
-
-#создать игру
-#метод Play у игры с циклами
-#игроки наследуются от класса Плеер
-#введение координат для ходов игроков - метод игрока
-
-
-# win = False
-# while True:
-#     if win:
-#         break
-#     player = game.pass_turn_to_player()
-#     print("Ход игрока " + player.symbol)
-#     while True:
-#         x = int(input("Введите координату x:"))
-#         y = int(input("Введите координату y:"))
-#         try:
-#             if game.playground.cell_is_free(x, y):
-#                 player.make_move(x, y, game.playground)
-#                 win = game.playground.check_win(player.symbol, x, y)
-#                 break
-#             else:
-#                 print("Клетка уже занята")
-#         except:
-#             print("Клетка по заданным вами координатам лежит вне игрового поля")
-
-#написать доку для make move - возвращает валидные координаты, куда можно поставить символ
-#перенести чек вин в Game - часть метода play
-#логика проверки - в класс Game
-#обращение к полям класса - это плохо
